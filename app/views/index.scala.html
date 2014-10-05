@@ -1,7 +1,24 @@
-@(message: String)
+<!DOCTYPE html>
 
-@main("Welcome to Play") {
+<html>
+    <head>
+        <title>Placeholder</title>
+        <link rel="stylesheet" href="@routes.Assets.at("stylesheets/main.css")">
+        <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
+    </head>
+    <body>
+        <button id="add-more-items">Add more Placeholder</button> You can use placeholders up to 1920x1080 pixel dimension by linking your image source to http://placeholder.website/&lt;width&gt;x&lt;height&gt;. <small>The grid is only visible if width and height are both divisble by 4.</small>
+        <fieldset>
+            <label for="width">Width: </label> <input id="width"  autofocus="true"/>
+            <label for="height">Height: </label> <input id="height" />
+            <button id="createPlaceholder">Create</button>
+        </fieldset>
+        <div id="placeholder-items">
 
-    @play20.welcome(message)
+        </div>
 
-}
+        <script src="@routes.Assets.at("javascripts/eventie.js")" type="text/javascript"></script>
+        <script src="@routes.Assets.at("javascripts/masonry.pkgd.js")" type="text/javascript"></script>
+        <script src="@routes.Assets.at("javascripts/main.js")" type="text/javascript"></script>
+    </body>
+</html>

@@ -1,16 +1,20 @@
 package controllers
 
-import java.awt.{Graphics2D, Font, Color}
 import java.awt.image.BufferedImage
+import java.awt.{Color, Font, Graphics2D}
+
+import play.api.Play
 import play.api.Play.current
-import play.api.{Play, Logger}
 import play.api.mvc._
+
 import scala.reflect.io.File
 
 object Application extends Controller {
   val backgroundColor = new Color(204, 204, 204)
   val markerColor = new Color(224, 224, 224)
   val textColor = new Color(0, 0, 0)
+
+  def index = Action { Ok(views.html.index())}
 
   def getPlaceholder(size: String) = Action {
     val split = size.split('x')
@@ -42,17 +46,17 @@ object Application extends Controller {
     g.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING,
       java.awt.RenderingHints.VALUE_ANTIALIAS_ON)
 
-    drawMarkers(g, width, height)
+    val offsetX = (12 until width / 4 + 1).find(e => width % e == 0).headOption
+    val offsetY = (12 until height / 4 + 1).find(e => height % e == 0).headOption
+    if (offsetX.isDefined && offsetY.isDefined)
+      drawMarkers(g, offsetX.get, offsetY.get, width, height, markerColor)
 
-    // draw text describing placeholder
-    val string = width + " x " + height
-    g.setColor(textColor)
-    g.setFont(new Font("Batang", Font.PLAIN, height / 4))
-    val stringLen = g.getFontMetrics.getStringBounds(string, g).getWidth.toInt
-    val stringHeight = g.getFontMetrics.getStringBounds(string, g).getHeight.toInt
-    val startX = width/2 - stringLen/2
-    val startY = height/2 + stringHeight/4
-    g.drawString(string, startX, startY)
+    if (width >= 3 && height >= 3) {
+      g.drawRect(0, 0, width - 1, height - 1)
+      g.drawRect(1, 1, width - 3, height - 3)
+    }
+
+    writeText(g, width, height)
 
     // done with drawing
     g.dispose()
@@ -61,28 +65,38 @@ object Application extends Controller {
     target
   }
 
-  private def drawMarkers(g: Graphics2D, width: Int, height: Int) = {
-    val offset = Seq(12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1).find(e => width % e == 0 && height % e == 0).head
-
-    val lineLength = Math.min(height / offset, width / offset)
-    g.setColor(markerColor)
-
-    for (dx <- offset to (width - offset, offset)) {
-      g.drawLine(dx, 0, dx, lineLength)
-      g.drawLine(dx, height, dx, height - lineLength)
-    }
-
-    for (dy <- offset to (height - offset, offset)) {
-      g.drawLine(0, dy, lineLength, dy)
-      g.drawLine(width, dy, width - lineLength, dy)
-    }
+  private def writeText(g: Graphics2D, width: Int, height: Int) = {
+    // draw text describing placeholder
+    val string = width + " x " + height
+    g.setColor(textColor)
+    var size = height / 3
+    var stringLen = 0
+    do {
+      g.setFont(new Font("Batang", Font.PLAIN, size))
+      stringLen = g.getFontMetrics.getStringBounds(string, g).getWidth.toInt
+      size-=1
+    } while(stringLen >= width)
+    val stringHeight = g.getFontMetrics.getStringBounds(string, g).getHeight.toInt
+    val startX = width / 2 - stringLen / 2
+    val startY = height / 2 + stringHeight / 4
+    g.drawString(string, startX, startY)
   }
 
-  private def toInt(s: String):Option[Int] = {
+  private def drawMarkers(g: Graphics2D, offsetX: Int, offsetY: Int, width: Int, height: Int, color: Color): Unit = {
+    g.setColor(color)
+
+    for (dx <- 0 to(width, offsetX);
+         dy <- 0 to(height, offsetY))
+      g.drawRect(dx, dy, offsetX, offsetY)
+
+    g.setColor(color.darker)
+  }
+
+  private def toInt(s: String): Option[Int] = {
     try {
       Some(s.toInt)
     } catch {
-      case e:Exception => None
+      case e: Exception => None
     }
   }
 }
